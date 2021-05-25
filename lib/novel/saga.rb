@@ -20,12 +20,12 @@ module Novel
     def call(params: {}, saga_id: SecureRandom.uuid, context: nil)
       context = repository.find_or_create_context(saga_id, params)
 
-      if context.not_failed?
+      if context.failed?
+        Failure(status: :saga_failed, compensation_result: compensation_flow_execution(context), context: context)
+      else
         activity_flow_execution(context).or do |error_result|
           Failure(status: :saga_failed, compensation_result: sync_compensation_result_for(context) || error_result, context: context)
         end
-      else
-        Failure(status: :saga_failed, compensation_result: compensation_flow_execution(context), context: context)
       end
     end
 

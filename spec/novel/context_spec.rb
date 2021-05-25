@@ -2,20 +2,6 @@ RSpec.describe Novel::Context do
   let(:context) { described_class.new(id: '123', params: params) }
   let(:params) { { key: 'value' } }
 
-  describe '#not_failed?' do
-    subject { context.not_failed? }
-
-    context 'when saga completed one or more compensation step' do
-      before { context.save_compensation_state(:test_failed_step, { a: 1 }) }
-
-      it { expect(subject).to be false }
-    end
-
-    context 'when saga did not completed one or more compensation step' do
-      it { expect(subject).to be true }
-    end
-  end
-
   describe '#failed?' do
     subject { context.failed? }
 
