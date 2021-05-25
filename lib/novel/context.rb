@@ -1,59 +1,50 @@
 require 'securerandom'
+require 'dry-struct'
 
 module Novel
-  class Context
-    attr_reader :id, :params, :saga_status, :last_competed_step, :last_competed_compensation_step, :saga_status
+  class Context  < Dry::Struct
+    module Types
+      include Dry.Types()
 
-    INIT_SAGA_STATUS = :started
-
-    def initialize(id:, params:, saga_status: INIT_SAGA_STATUS, last_competed_step: nil, last_competed_compensation_step: nil, step_results: {}, compensation_step_results: {}, failed: false)
-      @id = id
-      @params = params
-      @saga_status = saga_status
-
-      @last_competed_step = last_competed_step
-      @step_results = step_results
-
-      @compensation_step_results = compensation_step_results
-      @last_competed_compensation_step = last_competed_compensation_step
-
-      @failed = failed
+      Bool = True | False
     end
 
-    def to_h
-      {
-        id: @id,
-        params: @params,
-        saga_status: @saga_status,
-        last_competed_step: @last_competed_step,
-        step_results: @step_results,
-        last_competed_compensation_step: @last_competed_compensation_step,
-        compensation_step_results: @compensation_step_results
-      }
-    end
+    INIT_SAGA_STATUS = 'started'
+
+    attribute :id, Types::String
+    attribute :params, Types::Hash.default({})
+    attribute :saga_status, Types::String.default(INIT_SAGA_STATUS)
+
+    attribute? :last_competed_step, Types::Symbol
+    attribute :step_results, Types::Hash.default({})
+
+    attribute? :last_competed_compensation_step, Types::Symbol
+    attribute :compensation_step_results, Types::Hash.default({})
+
+    attribute :failed, Types::Bool.default(false)
 
     def success?
-      !@failed
+      !attributes[:failed]
     end
 
     def failed?
-      @failed
+      attributes[:failed]
     end
 
     def step(step)
-      @step_results[step]
+      attributes[:step_results][step]
     end
 
     def completed_steps
-      @step_results.keys
+      attributes[:step_results].keys
     end
 
     def compensation_step(step)
-      @compensation_step_results[step]
+      attributes[:compensation_step_results][step]
     end
 
     def completed_compensation_steps
-      @compensation_step_results.keys
+      attributes[:compensation_step_results].keys
     end
   end
 end
