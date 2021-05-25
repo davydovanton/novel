@@ -19,10 +19,18 @@ module Novel
     def call(params: {}, saga_id: SecureRandom.uuid, context: nil)
       context = context || Context.new(id: saga_id, params: params)
 
-      activity_flow_execution(context).or do |error_result|
-        return Failure(
+      if context.not_failed?
+        activity_flow_execution(context).or do |error_result|
+          if workflow.next_compensation_step(context.last_competed_compensation_step)[:async]
+            Failure(status: :saga_failed, compensation_result: error_result, context: context)
+          else
+            Failure(status: :saga_failed, compensation_result: compensation_flow_execution(context), context: context)
+          end
+        end
+      else
+        Failure(
           status: :saga_failed,
-          compensation_result: compensation_flow_execution(error_result, context),
+          compensation_result: compensation_flow_execution(context),
           context: context
         )
       end
@@ -31,26 +39,31 @@ module Novel
   private
 
     def activity_flow_execution(context)
-      workflow.activity_steps_from(context.last_competed_step).each do |step_information|
-        result = container.resolve("#{step_information[:name]}.activity").call(context)
+      workflow.activity_steps_from(context.last_competed_step).each do |step|
+        result = container.resolve("#{step[:name]}.activity").call(context)
 
         if result.failure?
-          return Failure(step: step_information[:name], result: result, context: context)
+          context.save_compensation_state(step[:name], result.failure)
+          return Failure(step: step[:name], result: result, context: context)
         end
 
-        context.save_state(step_information[:name], result.value!)
-        return Success(status: :waiting, context: context) if step_information[:async]
+        context.save_state(step[:name], result.value!)
+        return Success(status: :waiting, context: context) if workflow.next_activity_step(step[:name])[:async]
       end
 
       Success(status: :finish, context: context)
     end
 
-    def compensation_flow_execution(result, context)
-      workflow.compensation_steps_from(result[:step]).map do |step|
-        result = container.resolve("#{step}.compensation").call(context)
+    def compensation_flow_execution(context)
+      workflow.compensation_steps_from(context.last_competed_compensation_step).map do |step|
+        result = container.resolve("#{step[:name]}.compensation").call(context)
+        context.save_compensation_state(step[:name], result.value!)
 
-        context.save_compensation_state(step, result.value!)
-        result
+        if workflow.next_compensation_step(step[:name])&.fetch(:async)
+          return result
+        else
+          result
+        end
       end
     end
   end

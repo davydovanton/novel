@@ -2,7 +2,7 @@ require 'securerandom'
 
 module Novel
   class Context
-    attr_reader :id, :params, :last_competed_step
+    attr_reader :id, :params, :last_competed_step, :last_competed_compensation_step
 
     def initialize(id:, params:, step_results: {}, compensation_step_results: {})
       @id = id
@@ -13,6 +13,14 @@ module Novel
 
       @last_competed_step = nil
       @last_competed_compensation_step = nil
+    end
+
+    def not_failed?
+      @last_competed_compensation_step.nil?
+    end
+
+    def failed?
+      !@last_competed_compensation_step.nil?
     end
 
     def save_state(step, result)
