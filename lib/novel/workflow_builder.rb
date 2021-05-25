@@ -17,14 +17,10 @@ module Novel
     end
 
     def build
-      workflow = Workflow.new(raw: raw_workflow)
-
       Saga.new(
         name: name,
-        workflow: workflow,
-        repository: repository,
-        executor: Executor.new(workflow: workflow, container: build_container, repository: repository)
-
+        workflow: Workflow.new(raw: raw_workflow),
+        executor: Executor.new(container: build_container, repository: repository)
       )
     end
 

@@ -2,21 +2,33 @@ require 'securerandom'
 
 module Novel
   class Context
-    attr_reader :id, :params, :last_competed_step, :last_competed_compensation_step, :saga_status
+    attr_reader :id, :params, :saga_status, :last_competed_step, :last_competed_compensation_step, :saga_status
 
-    def initialize(id:, params:, step_results: {}, compensation_step_results: {})
+    INIT_SAGA_STATUS = :started
+
+    def initialize(id:, params:, saga_status: INIT_SAGA_STATUS, last_competed_step: nil, last_competed_compensation_step: nil, step_results: {}, compensation_step_results: {})
       @id = id
       @params = params
 
+      @saga_status = saga_status
+
+      @last_competed_step = last_competed_step
       @step_results = step_results
+
       @compensation_step_results = compensation_step_results
+      @last_competed_compensation_step = last_competed_compensation_step
 
-      @last_competed_step = nil
-      @last_competed_compensation_step = nil
-
-      @saga_status = StateMachines::SagaStatus.new
-      # @current_transaction_status = StateMachines::TransactionStatus.new
       @failed = false
+    end
+
+    def to_h
+      {
+        id: @id,
+        params: @params,
+        saga_status: @saga_status,
+        step_results: @step_results,
+        compensation_step_results: @compensation_step_results
+      }
     end
 
     def success?
@@ -25,6 +37,10 @@ module Novel
 
     def failed?
       @failed
+    end
+
+    def update_saga_status(new_status)
+      @saga_status = new_status
     end
 
     def save_state(step, result)

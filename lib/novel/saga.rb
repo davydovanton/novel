@@ -4,58 +4,45 @@ module Novel
   class Saga
     include Dry::Monads[:result]
 
-    attr_reader :workflow, :repository, :executor
+    attr_reader :workflow, :executor
 
-    def initialize(name:, workflow:, repository:, executor:)
+    def initialize(name:, workflow:, executor:)
       @name = name
 
       @workflow = workflow
-      @repository = repository
       @executor = executor
     end
 
     def call(params: {}, saga_id: SecureRandom.uuid)
-      context = repository.find_or_create_context(saga_id, params)
+      start_result = executor.start_transaction(saga_id, params, workflow.activity_steps.first)
+      return start_result if start_result.value![:status] == :waiting
+
+      context, saga_state = start_result.value![:context]
 
       if context.success?
-        if context.saga_status.started?
-          context.saga_status.wait
-          return Success(status: :waiting, context: context) if workflow.activity_steps.first[:async]
-        end
-
-        activity_flow_result = activity_flow_execution(context)
+        activity_flow_result = executor.call_activity_flow(context, saga_state, workflow.activity_steps_from(context.last_competed_step))
 
         activity_flow_result.or do |error_result|
-          compensation_result = sync_compensation_result_for(context) || error_result
+          compensation_result = sync_compensation_result_for(context, saga_state, error_result)
           Failure(status: :saga_failed, compensation_result: compensation_result, context: context)
         end
       else
-        compensation_result = compensation_flow_execution(context)
+        compensation_steps = workflow.compensation_steps_from(context.last_competed_compensation_step)
+        compensation_result = executor.call_compensation_flow(context, saga_state, compensation_steps)
         Failure(status: :saga_failed, compensation_result: compensation_result, context: context)
       end
     end
 
   private
 
-    def activity_flow_execution(context)
-      workflow.activity_steps_from(context.last_competed_step).each do |step|
-        result = executor.call_activity_transaction(step, context)
-        return result if result.failure? || result.value![:status] == :waiting
+    def sync_compensation_result_for(context, saga_state, error_result)
+      if workflow.next_compensation_step(context.last_competed_compensation_step)[:async]
+        # TODO: saga_state.wait
+        error_result
+      else
+        executor.call_compensation_flow(context, saga_state, workflow.compensation_steps_from(context.last_competed_compensation_step)
+)
       end
-
-      Success(status: :finished, context: context)
-    end
-
-    def compensation_flow_execution(context)
-      workflow.compensation_steps_from(context.last_competed_compensation_step).map do |step|
-        result = executor.call_compensation_transaction(step, context)
-
-        return result if result.value![:status] == :waiting
-      end
-    end
-
-    def sync_compensation_result_for(context)
-      compensation_flow_execution(context) unless workflow.next_compensation_step(context.last_competed_compensation_step)[:async]
     end
   end
 end
