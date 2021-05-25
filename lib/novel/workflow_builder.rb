@@ -10,7 +10,14 @@ module Novel
     def register_step(name, activity:, compensation: nil)
       self.class.new(
         name: name,
-        raw_workflow: raw_workflow + [{ name: name, activity: activity, compensation: compensation }]
+        raw_workflow: raw_workflow + [{ name: name, async: false, activity: activity, compensation: compensation }]
+      )
+    end
+
+    def register_async_step(name, activity:, compensation: nil)
+      self.class.new(
+        name: name,
+        raw_workflow: raw_workflow + [{ name: name, async: true, activity: activity, compensation: compensation }]
       )
     end
 

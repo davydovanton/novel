@@ -16,8 +16,8 @@ module Novel
       @container = container
     end
 
-    def call(params: {}, saga_id: SecureRandom.uuid)
-      context = Context.new(id: saga_id, params: params)
+    def call(params: {}, saga_id: SecureRandom.uuid, context: nil)
+      context = context || Context.new(id: saga_id, params: params)
 
       activity_flow_execution(context).or do |error_result|
         return Failure(
@@ -31,14 +31,15 @@ module Novel
   private
 
     def activity_flow_execution(context)
-      workflow.activity_flow.each do |step|
-        result = container.resolve("#{step}.activity").call(context)
+      workflow.activity_steps_from(context.last_competed_step).each do |step_information|
+        result = container.resolve("#{step_information[:name]}.activity").call(context)
 
         if result.failure?
-          return Failure(step: step, result: result, context: context)
+          return Failure(step: step_information[:name], result: result, context: context)
         end
 
-        context.step_result(step, result.value!)
+        context.save_state(step_information[:name], result.value!)
+        return Success(status: :waiting, context: context) if step_information[:async]
       end
 
       Success(status: :finish, context: context)
@@ -46,7 +47,10 @@ module Novel
 
     def compensation_flow_execution(result, context)
       workflow.compensation_steps_from(result[:step]).map do |step|
-        container.resolve("#{step}.compensation").call(context)
+        result = container.resolve("#{step}.compensation").call(context)
+
+        context.save_compensation_state(step, result.value!)
+        result
       end
     end
   end

@@ -16,6 +16,23 @@ module Novel
       @compensation_flow ||= raw.reverse.map { |step| step[:compensation] ? step[:name] : nil }
     end
 
+    def activity_steps
+      @activity_steps ||= raw.map { |step| { name: step[:name], async: step[:async] } }
+    end
+
+    def activity_steps_from(step)
+      if step
+        next_step_index = activity_flow.index(step) + 1
+        activity_steps.select { |s, _| activity_flow[next_step_index..-1].include?(s[:name]) }
+      else
+        activity_steps
+      end
+    end
+
+    def compensation_steps
+      @compensation_steps ||= raw.reverse.map { |step| step[:compensation] ? { name: step[:name], async: step[:async] } : nil }
+    end
+
     def compensation_steps_from(step)
       # TODO: question should I call compensation logic for failed step or should I call next step in the flow?
 
