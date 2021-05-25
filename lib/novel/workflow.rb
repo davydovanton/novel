@@ -16,6 +16,14 @@ module Novel
       @compensation_flow ||= raw.reverse.map { |step| step[:compensation] ? step[:name] : nil }
     end
 
+    def compensation_steps_from(step)
+      # TODO: question should I call compensation logic for failed step or should I call next step in the flow?
+
+      first_compensation_step_index = calculate_compensation_index(next_compensation_step(step))
+      compensation_flow[first_compensation_step_index..-1]
+    end
+
+
     def next_activity_step(step_name)
       # activity_flow.include?(step_name)
 
@@ -23,21 +31,21 @@ module Novel
     end
 
     def next_compensation_step(step_name)
-      if compensation_flow.include?(step_name)
-        get_next_by_index(compensation_flow, compensation_flow.index(step_name))
-      else
-        # activity_flow.include?(step_name)
+      # activity_flow.include?(step_name)
 
-        get_next_by_index(compensation_flow, activity_flow.reverse.index(step_name))
-      end
+      get_next_by_index(compensation_flow, calculate_compensation_index(step_name))
     end
 
 
   private
 
+    def calculate_compensation_index(step_name)
+      compensation_flow.include?(step_name) ? compensation_flow.index(step_name) : activity_flow.reverse.index(step_name)
+    end
+
     def get_next_by_index(list, step_index)
       next_index = step_index + 1
-      if next_index < list.count 
+      if next_index < list.count
         list[next_index] || get_next_by_index(list, step_index + 1)
       else
         FINISH_STEP
