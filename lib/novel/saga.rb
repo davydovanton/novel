@@ -1,31 +1,37 @@
-require 'securerandom'
-require 'dry/monads'
-
 require "novel/context"
 
 module Novel
   class Saga
     include Dry::Monads[:result]
 
-    attr_reader :container, :workflow, :repository
+    attr_reader :workflow, :repository, :executor
 
-    def initialize(name:, workflow:, repository:, container: Container.new)
+    def initialize(name:, workflow:, repository:, executor:)
       @name = name
 
       @workflow = workflow
       @repository = repository
-      @container = container
+      @executor = executor
     end
 
-    def call(params: {}, saga_id: SecureRandom.uuid, context: nil)
+    def call(params: {}, saga_id: SecureRandom.uuid)
       context = repository.find_or_create_context(saga_id, params)
 
-      if context.failed?
-        Failure(status: :saga_failed, compensation_result: compensation_flow_execution(context), context: context)
-      else
-        activity_flow_execution(context).or do |error_result|
-          Failure(status: :saga_failed, compensation_result: sync_compensation_result_for(context) || error_result, context: context)
+      if context.success?
+        if context.saga_status.started?
+          context.saga_status.wait
+          return Success(status: :waiting, context: context) if workflow.activity_steps.first[:async]
         end
+
+        activity_flow_result = activity_flow_execution(context)
+
+        activity_flow_result.or do |error_result|
+          compensation_result = sync_compensation_result_for(context) || error_result
+          Failure(status: :saga_failed, compensation_result: compensation_result, context: context)
+        end
+      else
+        compensation_result = compensation_flow_execution(context)
+        Failure(status: :saga_failed, compensation_result: compensation_result, context: context)
       end
     end
 
@@ -33,35 +39,18 @@ module Novel
 
     def activity_flow_execution(context)
       workflow.activity_steps_from(context.last_competed_step).each do |step|
-        result = container.resolve("#{step[:name]}.activity").call(context)
-
-        if result.failure?
-          context.save_compensation_state(step[:name], result.failure)
-          repository.persist_context(context.id, context)
-
-          return Failure(step: step[:name], result: result, context: context)
-        end
-
-        context.save_state(step[:name], result.value!)
-        repository.persist_context(context.id, context)
-
-        return Success(status: :waiting, context: context) if workflow.next_activity_step(step[:name])[:async]
+        result = executor.call_activity_transaction(step, context)
+        return result if result.failure? || result.value![:status] == :waiting
       end
 
-      Success(status: :finish, context: context)
+      Success(status: :finished, context: context)
     end
 
     def compensation_flow_execution(context)
       workflow.compensation_steps_from(context.last_competed_compensation_step).map do |step|
-        result = container.resolve("#{step[:name]}.compensation").call(context)
-        context.save_compensation_state(step[:name], result.value!)
-        repository.persist_context(context.id, context)
+        result = executor.call_compensation_transaction(step, context)
 
-        if workflow.next_compensation_step(step[:name])&.fetch(:async)
-          return result
-        else
-          result
-        end
+        return result if result.value![:status] == :waiting
       end
     end
 

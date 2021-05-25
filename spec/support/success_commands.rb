@@ -1,6 +1,6 @@
 require 'dry/monads'
 
-module FailureTest
+module SuccessTest
   class BaseStep
     include Dry::Monads[:result]
 
@@ -11,30 +11,15 @@ module FailureTest
 
   # main commands
 
-  class ReserveCar < BaseStep
-    def call(context)
-      Success(result: rand(1..100))
-    end
-  end
-
+  class ReserveCar < BaseStep; end
   class BookHotelProducer < BaseStep; end
   class BookHotelHandler < BaseStep; end
   class BookTools < BaseStep; end
-
-  class BookFlight < BaseStep
-    def call(context)
-      Failure(failure_result: rand(1..100))
-    end
-  end
+  class BookFlight < BaseStep; end
 
   # compensation commands
 
-  class CancelCar < BaseStep
-    def call(context)
-      Success(result: rand(1..100))
-    end
-  end
-
+  class CancelCar < BaseStep; end
   class CancelHotelProducer < BaseStep; end
   class CancelHotelHandler < BaseStep; end
   class CancelTools < BaseStep; end

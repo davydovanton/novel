@@ -1,7 +1,7 @@
 require 'novel/repository_adapters/memory'
 
 module Novel
-  class Repository
+  class SagaRepository
     attr_reader :adapter
 
     def initialize(adapter: RepositoryAdapters::Memory.new)
@@ -9,11 +9,7 @@ module Novel
     end
 
     def find_or_create_context(saga_id, params)
-      find_context(saga_id) || persist_context(saga_id, Context.new(id: saga_id, params: params))
-    end
-
-    def find_context(saga_id)
-      adapter.find_context(saga_id)
+      adapter.find_context(saga_id) || adapter.persist_context(saga_id, Context.new(id: saga_id, params: params))
     end
 
     def persist_context(saga_id, context)

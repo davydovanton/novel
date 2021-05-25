@@ -1,8 +1,8 @@
 require_relative '../support/failure_commands'
 
-RSpec.describe 'full failure flow' do
+RSpec.describe 'Novel full flow with failure steps' do
   let(:saga) do
-    Novel.compose(logger: Logger.new(STDOUT), repository: :memory, timeouts: 5) # timeout in seconds
+    Novel.compose(repository: :memory)
       .build(name: :booking)
       .register_step(:car,           activity: { command: FailureTest::ReserveCar.new, retry: 3 },          compensation: { command: FailureTest::CancelCar.new, retry: 3 })
       .register_step(:notify_hotel,  activity: { command: FailureTest::BookHotelProducer.new },             compensation: { command: FailureTest::CancelHotelHandler.new, async: true })

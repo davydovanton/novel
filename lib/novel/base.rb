@@ -3,7 +3,7 @@ module Novel
     attr_reader :logger, :repository
 
     REPOSITORIES = {
-      memory: Repository.new(adapter: RepositoryAdapters::Memory.new)
+      memory: SagaRepository.new(adapter: RepositoryAdapters::Memory.new)
     }
 
     def initialize(logger:, repository:, timeout:, **args)
