@@ -1,17 +1,15 @@
 module Novel
   class WorkflowBuilder
-    attr_reader :name, :description, :raw_workflow
+    attr_reader :name, :raw_workflow
 
-    def initialize(name:, description: '', raw_workflow: [])
+    def initialize(name:, raw_workflow: [])
       @name = name
-      @description = description
       @raw_workflow = raw_workflow
     end
 
     def register_step(name, activity:, compensation: nil)
       self.class.new(
         name: name,
-        description: description,
         raw_workflow: raw_workflow + [{ name: name, activity: activity, compensation: compensation }]
       )
     end
@@ -19,7 +17,6 @@ module Novel
     def build
       Saga.new(
         name: name,
-        description: description,
         workflow: Workflow.new(raw: raw_workflow),
         container: build_container
       )
