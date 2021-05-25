@@ -9,7 +9,7 @@ module Novel
     end
 
     def activity_steps
-      @activity_steps ||= raw.map { |step| { name: step[:name], async: step[:async] } }
+      @activity_steps ||= raw.map { |step| { name: step[:name], async: step[:activity][:async] } }
     end
 
     def activity_steps_from(step)
@@ -23,7 +23,7 @@ module Novel
     end
 
     def compensation_steps
-      @compensation_steps ||= raw.reverse.map { |step| step[:compensation] ? { name: step[:name], async: step[:async] } : nil }.compact
+      @compensation_steps ||= raw.reverse.map { |step| step[:compensation] ? { name: step[:name], async: step[:compensation][:async] } : nil }.compact
     end
 
     def compensation_steps_from(step)

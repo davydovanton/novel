@@ -10,14 +10,7 @@ module Novel
     def register_step(name, activity:, compensation: nil)
       self.class.new(
         name: name,
-        raw_workflow: raw_workflow + [{ name: name, async: false, activity: activity, compensation: compensation }]
-      )
-    end
-
-    def register_async_step(name, activity:, compensation: nil)
-      self.class.new(
-        name: name,
-        raw_workflow: raw_workflow + [{ name: name, async: true, activity: activity, compensation: compensation }]
+        raw_workflow: raw_workflow + [{ name: name, activity: activity, compensation: compensation }]
       )
     end
 
@@ -34,8 +27,8 @@ module Novel
     def build_container
       container = Container.new
       raw_workflow.each do |step|
-        container.register("#{step[:name]}.activity", step[:activity])
-        container.register("#{step[:name]}.compensation", step[:compensation])
+        container.register("#{step[:name]}.activity", step[:activity][:command])
+        container.register("#{step[:name]}.compensation", step[:compensation][:command])
       end
       container
     end
