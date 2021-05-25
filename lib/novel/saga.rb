@@ -7,17 +7,18 @@ module Novel
   class Saga
     include Dry::Monads[:result]
 
-    attr_reader :container, :workflow
+    attr_reader :container, :workflow, :repository
 
-    def initialize(name:, workflow:, container: Container.new)
+    def initialize(name:, workflow:, repository:, container: Container.new)
       @name = name
 
       @workflow = workflow
+      @repository = repository
       @container = container
     end
 
     def call(params: {}, saga_id: SecureRandom.uuid, context: nil)
-      context = context || Context.new(id: saga_id, params: params)
+      context = repository.find_or_create_context(saga_id, params)
 
       if context.not_failed?
         activity_flow_execution(context).or do |error_result|
