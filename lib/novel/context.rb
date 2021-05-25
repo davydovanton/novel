@@ -37,8 +37,16 @@ module Novel
       @step_results[step]
     end
 
+    def completed_steps
+      @step_results.keys
+    end
+
     def compensation_step(step)
       @compensation_step_results[step]
+    end
+
+    def completed_compensation_steps
+      @compensation_step_results.keys
     end
   end
 end

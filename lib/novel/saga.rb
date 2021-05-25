@@ -22,18 +22,10 @@ module Novel
 
       if context.not_failed?
         activity_flow_execution(context).or do |error_result|
-          if workflow.next_compensation_step(context.last_competed_compensation_step)[:async]
-            Failure(status: :saga_failed, compensation_result: error_result, context: context)
-          else
-            Failure(status: :saga_failed, compensation_result: compensation_flow_execution(context), context: context)
-          end
+          Failure(status: :saga_failed, compensation_result: sync_compensation_result_for(context) || error_result, context: context)
         end
       else
-        Failure(
-          status: :saga_failed,
-          compensation_result: compensation_flow_execution(context),
-          context: context
-        )
+        Failure(status: :saga_failed, compensation_result: compensation_flow_execution(context), context: context)
       end
     end
 
@@ -45,10 +37,14 @@ module Novel
 
         if result.failure?
           context.save_compensation_state(step[:name], result.failure)
+          repository.persist_context(context.id, context)
+
           return Failure(step: step[:name], result: result, context: context)
         end
 
         context.save_state(step[:name], result.value!)
+        repository.persist_context(context.id, context)
+
         return Success(status: :waiting, context: context) if workflow.next_activity_step(step[:name])[:async]
       end
 
@@ -59,6 +55,7 @@ module Novel
       workflow.compensation_steps_from(context.last_competed_compensation_step).map do |step|
         result = container.resolve("#{step[:name]}.compensation").call(context)
         context.save_compensation_state(step[:name], result.value!)
+        repository.persist_context(context.id, context)
 
         if workflow.next_compensation_step(step[:name])&.fetch(:async)
           return result
@@ -66,6 +63,10 @@ module Novel
           result
         end
       end
+    end
+
+    def sync_compensation_result_for(context)
+      compensation_flow_execution(context) unless workflow.next_compensation_step(context.last_competed_compensation_step)[:async]
     end
   end
 end
