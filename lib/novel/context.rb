@@ -38,7 +38,7 @@ module Novel
     end
 
     def compensation_step(step)
-      compensation_step_results[step]
+      @compensation_step_results[step]
     end
   end
 end
