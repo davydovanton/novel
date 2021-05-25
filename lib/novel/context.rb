@@ -6,10 +6,9 @@ module Novel
 
     INIT_SAGA_STATUS = :started
 
-    def initialize(id:, params:, saga_status: INIT_SAGA_STATUS, last_competed_step: nil, last_competed_compensation_step: nil, step_results: {}, compensation_step_results: {})
+    def initialize(id:, params:, saga_status: INIT_SAGA_STATUS, last_competed_step: nil, last_competed_compensation_step: nil, step_results: {}, compensation_step_results: {}, failed: false)
       @id = id
       @params = params
-
       @saga_status = saga_status
 
       @last_competed_step = last_competed_step
@@ -18,7 +17,7 @@ module Novel
       @compensation_step_results = compensation_step_results
       @last_competed_compensation_step = last_competed_compensation_step
 
-      @failed = false
+      @failed = failed
     end
 
     def to_h
@@ -26,7 +25,9 @@ module Novel
         id: @id,
         params: @params,
         saga_status: @saga_status,
+        last_competed_step: @last_competed_step,
         step_results: @step_results,
+        last_competed_compensation_step: @last_competed_compensation_step,
         compensation_step_results: @compensation_step_results
       }
     end
@@ -37,21 +38,6 @@ module Novel
 
     def failed?
       @failed
-    end
-
-    def update_saga_status(new_status)
-      @saga_status = new_status
-    end
-
-    def save_state(step, result)
-      @last_competed_step = step
-      @step_results[step] = result
-    end
-
-    def save_compensation_state(step, result)
-      @failed = true
-      @last_competed_compensation_step = step
-      @compensation_step_results[step] = result
     end
 
     def step(step)

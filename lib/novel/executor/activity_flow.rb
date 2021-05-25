@@ -15,6 +15,9 @@ module Novel
           result = execut_step(context, state_machine, step, steps[index + 1])
 
           return result if result.failure? || result.value![:status] == :waiting
+
+          context = result.value![:context]
+          result
         end
 
         Success(status: :finished, context: context)
@@ -27,18 +30,29 @@ module Novel
 
         if result.failure?
           state_machine.ruin
-          context.save_compensation_state(step[:name], result.failure)
-          repository.persist_context(context)
 
-          return Failure(result: result, context: context)
+          new_context = repository.persist_context(
+            context,
+            failed: true,
+            saga_status: state_machine.state,
+            last_competed_compensation_step: step[:name],
+            compensation_step_results: context.to_h[:compensation_step_results].merge(step[:name] => result.failure)
+          )
+
+          return Failure(result: result, context: new_context)
         end
 
         status = transaction_status(next_step, state_machine)
 
-        context.save_state(step[:name], result.value!)
-        repository.persist_context(context)
-
-        Success(status: status, context: context)
+        Success(
+          status: status,
+          context: repository.persist_context(
+            context,
+            saga_status: state_machine.state,
+            last_competed_step: step[:name],
+            step_results: context.to_h[:step_results].merge(step[:name] => result.value!)
+          )
+        )
       end
 
       def transaction_status(next_step, state_machine)

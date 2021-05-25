@@ -13,6 +13,7 @@ module Novel
       def call(context, state_machine, steps)
         steps.each_with_index.map do |step, index|
           result = execut_step(context, state_machine, step, steps[index + 1])
+          context = result.value![:context]
 
           if result.value![:status] == :waiting
             return result
@@ -26,12 +27,19 @@ module Novel
 
       def execut_step(context, state_machine, step, next_step)
         result = container.resolve("#{step[:name]}.compensation").call(context)
-
         status = transaction_status(next_step, state_machine)
-        context.save_compensation_state(step[:name], result.value!)
-        repository.persist_context(context)
 
-        Success(status: status, result: result, context: context)
+        Success(
+          status: status,
+          result: result,
+          context: repository.persist_context(
+            context,
+            failed: true,
+            saga_status: state_machine.state,
+            last_competed_compensation_step: step[:name],
+            compensation_step_results: context.to_h[:compensation_step_results].merge(step[:name] => result.value!)
+          )
+        )
       end
 
       def transaction_status(next_step, state_machine)

@@ -21,8 +21,7 @@ module Novel
 
       if state_machine.started?
         state_machine.wait
-        context.update_saga_status(state_machine.state)
-        repository.persist_context(context)
+        repository.persist_context(context, saga_status: state_machine.state)
         return Success(status: :waiting, context: context) if first_step[:async]
       end
 

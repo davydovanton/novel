@@ -12,8 +12,10 @@ module Novel
       adapter.find_context(saga_id) || adapter.persist_context(saga_id, Context.new(id: saga_id, params: params))
     end
 
-    def persist_context(context)
-      adapter.persist_context(context.id, context)
+    def persist_context(context, **params)
+      new_context = Context.new({ **context.to_h, **params })
+      adapter.persist_context(context.id, new_context)
+      new_context
     end
   end
 end

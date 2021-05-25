@@ -23,13 +23,15 @@ module Novel
         activity_flow_result = executor.call_activity_flow(context, saga_state, workflow.activity_steps_from(context.last_competed_step))
 
         activity_flow_result.or do |error_result|
-          compensation_result = sync_compensation_result_for(context, saga_state, error_result)
-          Failure(status: :saga_failed, compensation_result: compensation_result, context: context)
+          compensation_result = sync_compensation_result_for(error_result[:context], saga_state, error_result)
+
+          Failure(status: :saga_failed, compensation_result: compensation_result, context: compensation_result.value![:context])
         end
       else
         compensation_steps = workflow.compensation_steps_from(context.last_competed_compensation_step)
         compensation_result = executor.call_compensation_flow(context, saga_state, compensation_steps)
-        Failure(status: :saga_failed, compensation_result: compensation_result, context: context)
+
+        Failure(status: :saga_failed, compensation_result: compensation_result, context: compensation_result.last.value![:context])
       end
     end
 
@@ -38,10 +40,9 @@ module Novel
     def sync_compensation_result_for(context, saga_state, error_result)
       if workflow.next_compensation_step(context.last_competed_compensation_step)[:async]
         # TODO: saga_state.wait
-        error_result
+        Success(error_result: error_result, context: context)
       else
-        executor.call_compensation_flow(context, saga_state, workflow.compensation_steps_from(context.last_competed_compensation_step)
-)
+        executor.call_compensation_flow(context, saga_state, workflow.compensation_steps_from(context.last_competed_compensation_step))
       end
     end
   end
