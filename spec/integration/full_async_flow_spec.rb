@@ -4,9 +4,9 @@ RSpec.describe 'Novel full flow with only async steps' do
   let(:saga) do
     Novel.compose(repository: :memory)
       .build(name: :booking)
-      .register_step(:car,           activity: { command: SuccessTest::ReserveCar.new, async: true }, compensation: { command: SuccessTest::CancelCar.new })
-      .register_step(:tools,         activity: { command: SuccessTest::BookTools.new, async: true }, compensation: { command: SuccessTest::CancelTools.new })
-      .register_step(:flight,        activity: { command: SuccessTest::BookFlight.new, async: true }, compensation: { command: SuccessTest::CancelFlight.new })
+      .register_step(:car,    activity: { command: SuccessTest::ReserveCar.new, async: true }, compensation: { command: SuccessTest::CancelCar.new })
+      .register_step(:tools,  activity: { command: SuccessTest::BookTools.new, async: true }, compensation: { command: SuccessTest::CancelTools.new })
+      .register_step(:flight, activity: { command: SuccessTest::BookFlight.new, async: true }, compensation: { command: SuccessTest::CancelFlight.new })
       .build
   end
 

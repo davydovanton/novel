@@ -16,6 +16,7 @@ require 'novel/version'
 
 module Novel
   class Error < StandardError; end
+  class InvalidRepositoryError < Error; end
 
   BASE_LOGGER = Logger.new(STDOUT)
   ONE_MINUTE = 60
