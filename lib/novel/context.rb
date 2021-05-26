@@ -9,17 +9,17 @@ module Novel
       Bool = True | False
     end
 
-    INIT_SAGA_STATUS = 'started'
+    INIT_SAGA_STATUS = 'started'.freeze
 
     attribute :id, Types::String
-    attribute :params, Types::Hash.default({})
+    attribute :params, Types::Hash.default({}, shared: true)
     attribute :saga_status, Types::String.default(INIT_SAGA_STATUS)
 
     attribute? :last_competed_step, Types::Symbol
-    attribute :step_results, Types::Hash.default({})
+    attribute :step_results, Types::Hash.default({}, shared: true)
 
     attribute? :last_competed_compensation_step, Types::Symbol
-    attribute :compensation_step_results, Types::Hash.default({})
+    attribute :compensation_step_results, Types::Hash.default({}, shared: true)
 
     attribute :failed, Types::Bool.default(false)
 
