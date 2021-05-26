@@ -1,4 +1,5 @@
 require 'novel/repository_adapters/memory'
+require 'novel/repository_adapters/redis'
 
 module Novel
   class SagaRepository

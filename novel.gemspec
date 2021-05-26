@@ -30,6 +30,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rspec", "~> 3.0"
 
+  spec.add_development_dependency "connection_pool"
+  spec.add_development_dependency "redis"
+
   spec.add_dependency "dry-monads", "~> 1.3"
   spec.add_dependency "dry-struct", "~> 1.0"
 
