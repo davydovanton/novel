@@ -12,7 +12,7 @@ module Novel
 
       def call(context, state_machine, steps)
         steps.each_with_index.map do |step, index|
-          result = execut_step(context, state_machine, step, steps[index + 1])
+          result = execute_step(context, state_machine, step, steps[index + 1])
           context = result.value![:context]
 
           if result.value![:status] == :waiting
@@ -25,7 +25,7 @@ module Novel
 
     private
 
-      def execut_step(context, state_machine, step, next_step)
+      def execute_step(context, state_machine, step, next_step)
         result = container.resolve("#{step[:name]}.compensation").call(context)
         status = transaction_status(next_step, state_machine)
 
@@ -36,7 +36,7 @@ module Novel
             context,
             failed: true,
             saga_status: state_machine.state,
-            last_competed_compensation_step: step[:name],
+            last_completed_compensation_step: step[:name],
             compensation_step_results: context.to_h[:compensation_step_results].merge(step[:name] => result.value!)
           )
         )

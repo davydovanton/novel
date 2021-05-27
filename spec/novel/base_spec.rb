@@ -16,7 +16,7 @@ RSpec.describe Novel::Base do
       context 'and repository does not exist in the library' do
         let(:repository) { :nothing }
 
-        it { expect{ subject }.to raise_error(Novel::InvalidRepositoryError, "Repository 'nothing' does not exist in Novel. Please, use custom object insted") }
+        it { expect{ subject }.to raise_error(Novel::InvalidRepositoryError, "Repository 'nothing' does not exist in Novel. Please, use custom object instead.") }
       end
     end
 

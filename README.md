@@ -6,16 +6,16 @@ The main reason why Novel exists is personal motivation to understand SAGA patte
 
 Key concepts:
 
-- Immutable objects only;
-- No global state. It means that you need to use IoC or containers by yourself;
-- Context object as a state of SAGA and only one way to get data in each command;
-- Monads as a result value for each step and full saga flow;
+- Immutable objects only.
+- No global state. It means that you need to use IoC or containers by yourself.
+- Context object as a state of SAGA and only one way to get data in each command.
+- Monads as a result value for each step and full saga flow.
 
 Dependencies:
 
 - `dry-monads` as a result values for everything. Also, saga commands works only with result monads;
 - `dry-types` as a DTO builder for context object;
-- `state_machines` gem as a main state machine implementation;
+- `state_machines` gem as a main state machine implementation.
 
 ## Installation
 
@@ -39,9 +39,9 @@ You can see all examples in https://github.com/davydovanton/novel/tree/master/ex
 ### Commands
 The main object of SAGA. Each command should follow specific rules:
 
-- One command - one business step/transaction;
+- One command - one business step/transaction.
 - Result of each object should be a Result monad (success/failure). When the command returns failure monad Novel starts compensation flow.
-- Each command should take only one argument - `context` object. In context object you can get initial params + result of each step (activity and compensation);
+- Each command should take only one argument - `context` object. In context object you can get initial params + result of each step (activity and compensation).
 
 ### Building SAGA
 For building orchestration you need to use this DSL:
@@ -61,7 +61,7 @@ Sync steps allow you to call the next step without waiting. It means that each s
 
 ```ruby
 # will create tools step with sync activity command and sync compensation command
-.register_step(:tools, activity: { command: BookTools.new },                     compensation: { command: CancelTools.new })
+.register_step(:tools, activity: { command: BookTools.new }, compensation: { command: CancelTools.new })
 ```
 
 #### Async steps
@@ -70,7 +70,7 @@ Async steps allow you to wait any time between steps. It's really useful when yo
 ```ruby
 # will create two steps:
 #   - notify_hotel step with sync activity command and async compensation command 
-#   - handle_hotel step with async activity command and sync compensation command.
+#   - handle_hotel step with async activity command and sync compensation command
 .register_step(:notify_hotel,  activity: { command: BookHotelProducer.new },             compensation: { command: CancelHotelHandler.new, async: true })
 .register_step(:handle_hotel,  activity: { command: BookHotelHandler.new, async: true }, compensation: { command: CancelHotelProducer.new })
 ```
@@ -86,8 +86,8 @@ saga.call(result.value!.id) # second call for saga flow. In this case you need t
 
 ### Context object
 Context object provides two options:
-1. getting state of saga flow: it means that you can get the current state of saga execution, returned values for each step, and other useful information.
-2. continue working with the same saga flow in a different place (other instance of an application or other part of your system). We can do it because each context object can persist in any DB. Novel allows persisting context in memory or redis.
+1. Getting state of saga flow: it means that you can get the current state of saga execution, returned values for each step, and other useful information.
+2. Continue working with the same saga flow in a different place (other instance of an application or other part of your system). We can do it because each context object can persist in any DB. Novel allows persisting context in memory or redis.
 
 For more information check the source code of the context object (https://github.com/davydovanton/novel/blob/master/lib/novel/context.rb)
 

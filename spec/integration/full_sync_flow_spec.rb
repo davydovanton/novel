@@ -16,8 +16,8 @@ RSpec.describe 'Novel full flow with only sync steps' do
     expect(result).to be_success
     expect(result.value![:status]).to eq(:finished)
 
-    expect(result.value![:context].last_competed_step).to eq(:flight)
-    expect(result.value![:context].last_competed_compensation_step).to eq(nil)
+    expect(result.value![:context].last_completed_step).to eq(:flight)
+    expect(result.value![:context].last_completed_compensation_step).to eq(nil)
 
     expect(result.value![:context].completed_steps).to eq([:car, :tools, :flight])
     expect(result.value![:context].completed_compensation_steps).to eq([])

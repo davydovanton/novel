@@ -15,10 +15,10 @@ module Novel
     attribute :params, Types::Hash.default({}, shared: true)
     attribute :saga_status, Types::String.default(INIT_SAGA_STATUS)
 
-    attribute? :last_competed_step, Types::Symbol
+    attribute? :last_completed_step, Types::Symbol
     attribute :step_results, Types::Hash.default({}, shared: true)
 
-    attribute? :last_competed_compensation_step, Types::Symbol
+    attribute? :last_completed_compensation_step, Types::Symbol
     attribute :compensation_step_results, Types::Hash.default({}, shared: true)
 
     attribute :failed, Types::Bool.default(false)
