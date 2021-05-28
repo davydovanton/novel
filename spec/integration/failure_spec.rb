@@ -18,8 +18,8 @@ RSpec.describe 'Novel full flow with failure steps' do
     expect(success_result).to be_success
     expect(success_result.value![:status]).to eq(:waiting)
 
-    expect(success_result.value![:context].last_competed_step).to eq(:notify_hotel)
-    expect(success_result.value![:context].last_competed_compensation_step).to eq(nil)
+    expect(success_result.value![:context].last_completed_step).to eq(:notify_hotel)
+    expect(success_result.value![:context].last_completed_compensation_step).to eq(nil)
 
     expect(success_result.value![:context].completed_steps).to eq([:car, :notify_hotel])
     expect(success_result.value![:context].completed_compensation_steps).to eq([])
@@ -30,8 +30,8 @@ RSpec.describe 'Novel full flow with failure steps' do
     expect(failure_result).to be_failure
     expect(failure_result.failure[:status]).to eq(:saga_failed)
 
-    expect(failure_result.failure[:context].last_competed_step).to eq(:tools)
-    expect(failure_result.failure[:context].last_competed_compensation_step).to eq(:handle_hotel)
+    expect(failure_result.failure[:context].last_completed_step).to eq(:tools)
+    expect(failure_result.failure[:context].last_completed_compensation_step).to eq(:handle_hotel)
 
     expect(failure_result.failure[:context].completed_steps).to eq([:car, :notify_hotel, :handle_hotel, :tools])
     expect(failure_result.failure[:context].completed_compensation_steps).to eq([:flight, :tools, :handle_hotel])
@@ -43,8 +43,8 @@ RSpec.describe 'Novel full flow with failure steps' do
     expect(new_failure_result).to be_failure
     expect(new_failure_result.failure[:status]).to eq(:saga_failed)
 
-    expect(new_failure_result.failure[:context].last_competed_step).to eq(:tools)
-    expect(new_failure_result.failure[:context].last_competed_compensation_step).to eq(:car)
+    expect(new_failure_result.failure[:context].last_completed_step).to eq(:tools)
+    expect(new_failure_result.failure[:context].last_completed_compensation_step).to eq(:car)
 
     expect(new_failure_result.failure[:context].completed_steps).to eq([:car, :notify_hotel, :handle_hotel, :tools])
     expect(new_failure_result.failure[:context].completed_compensation_steps).to eq([:flight, :tools, :handle_hotel, :notify_hotel, :car])

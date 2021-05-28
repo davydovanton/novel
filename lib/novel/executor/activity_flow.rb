@@ -12,7 +12,7 @@ module Novel
 
       def call(context, state_machine, steps)
         steps.each_with_index do |step, index|
-          result = execut_step(context, state_machine, step, steps[index + 1])
+          result = execute_step(context, state_machine, step, steps[index + 1])
 
           return result if result.failure? || result.value![:status] == :waiting
 
@@ -25,7 +25,7 @@ module Novel
 
     private
 
-      def execut_step(context, state_machine, step, next_step)
+      def execute_step(context, state_machine, step, next_step)
         result = container.resolve("#{step[:name]}.activity").call(context)
 
         if result.failure?
@@ -35,7 +35,7 @@ module Novel
             context,
             failed: true,
             saga_status: state_machine.state,
-            last_competed_compensation_step: step[:name],
+            last_completed_compensation_step: step[:name],
             compensation_step_results: context.to_h[:compensation_step_results].merge(step[:name] => result.failure)
           )
 
@@ -49,7 +49,7 @@ module Novel
           context: repository.persist_context(
             context,
             saga_status: state_machine.state,
-            last_competed_step: step[:name],
+            last_completed_step: step[:name],
             step_results: context.to_h[:step_results].merge(step[:name] => result.value!)
           )
         )

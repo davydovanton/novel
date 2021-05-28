@@ -16,8 +16,8 @@ RSpec.describe 'Novel full flow with only async steps' do
     expect(result).to be_success
     expect(result.value![:status]).to eq(:waiting)
 
-    expect(result.value![:context].last_competed_step).to eq(nil)
-    expect(result.value![:context].last_competed_compensation_step).to eq(nil)
+    expect(result.value![:context].last_completed_step).to eq(nil)
+    expect(result.value![:context].last_completed_compensation_step).to eq(nil)
 
     expect(result.value![:context].completed_steps).to eq([])
     expect(result.value![:context].completed_compensation_steps).to eq([])
@@ -28,8 +28,8 @@ RSpec.describe 'Novel full flow with only async steps' do
     expect(second_result).to be_success
     expect(second_result.value![:status]).to eq(:waiting)
 
-    expect(second_result.value![:context].last_competed_step).to eq(:car)
-    expect(second_result.value![:context].last_competed_compensation_step).to eq(nil)
+    expect(second_result.value![:context].last_completed_step).to eq(:car)
+    expect(second_result.value![:context].last_completed_compensation_step).to eq(nil)
 
     expect(second_result.value![:context].completed_steps).to eq([:car])
     expect(second_result.value![:context].completed_compensation_steps).to eq([])
@@ -41,8 +41,8 @@ RSpec.describe 'Novel full flow with only async steps' do
     expect(third_result).to be_success
     expect(third_result.value![:status]).to eq(:waiting)
 
-    expect(third_result.value![:context].last_competed_step).to eq(:tools)
-    expect(third_result.value![:context].last_competed_compensation_step).to eq(nil)
+    expect(third_result.value![:context].last_completed_step).to eq(:tools)
+    expect(third_result.value![:context].last_completed_compensation_step).to eq(nil)
 
     expect(third_result.value![:context].completed_steps).to eq([:car, :tools])
     expect(third_result.value![:context].completed_compensation_steps).to eq([])
@@ -54,8 +54,8 @@ RSpec.describe 'Novel full flow with only async steps' do
     expect(fourth_result).to be_success
     expect(fourth_result.value![:status]).to eq(:finished)
 
-    expect(fourth_result.value![:context].last_competed_step).to eq(:flight)
-    expect(fourth_result.value![:context].last_competed_compensation_step).to eq(nil)
+    expect(fourth_result.value![:context].last_completed_step).to eq(:flight)
+    expect(fourth_result.value![:context].last_completed_compensation_step).to eq(nil)
 
     expect(fourth_result.value![:context].completed_steps).to eq([:car, :tools, :flight])
     expect(fourth_result.value![:context].completed_compensation_steps).to eq([])
